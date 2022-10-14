@@ -10,4 +10,8 @@ aclocal.m4
 /install-sh
 /Makefile
 /Makefile.in
+/config.h
+/config.h.in
+/missing
+/stamp-h1
 /ca
