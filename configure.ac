@@ -1,5 +1,5 @@
 AC_INIT([circa], [1.0], [andy@bitshaper.co.uk])
-AM_INIT_AUTOMAKE
+AM_INIT_AUTOMAKE([foreign])
 AC_PROG_CC
 AC_CONFIG_HEADERS([config.h])
 AC_CHECK_LIB([jansson], [json_array_set_new], [],
