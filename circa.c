@@ -118,6 +118,25 @@ main(int argc, char* argv[])
 
         timestamp_text = json_string_value(timestamp);
         printf("optimal timestamp %s\n", timestamp_text);
+
+        // assume fixed GMT iso8601 format
+        int y,M,d,h,m,s;
+        sscanf(timestamp_text, "%d-%d-%dT%d:%d:%d+00:00", &y, &M, &d, &h, &m, &s);
+        printf("optimal time %02i:%02i\n", h, m);
+
+        struct tm timestamp_tm = {
+          .tm_year = y - 1900, // years from 1900
+          .tm_mon = M - 1, // 0-based
+          .tm_mday = d, // 1-based
+          .tm_hour = h,
+          .tm_min = m,
+          .tm_sec = s
+        };
+        time_t now, optimal_time;
+        optimal_time = mktime(&timestamp_tm);
+        time(&now);
+        printf("Sleeping for %.2f minutes",
+          difftime(optimal_time, now) / 60);
       }
 
     }
