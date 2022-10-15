@@ -2,10 +2,11 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <jansson.h>
 #include <curl/curl.h>
 
 struct response_t {
-  char *memory;
+  char *text;
   size_t size;
 };
  
@@ -15,17 +16,17 @@ write_response(void *contents, size_t size, size_t nmemb, void *userp)
   size_t realsize = size * nmemb;
   struct response_t *mem = (struct response_t *)userp;
  
-  char *ptr = realloc(mem->memory, mem->size + realsize + 1);
+  char *ptr = realloc(mem->text, mem->size + realsize + 1);
   if(!ptr) {
     /* out of memory! */
     printf("not enough memory (realloc returned NULL)\n");
     return 0;
   }
  
-  mem->memory = ptr;
-  memcpy(&(mem->memory[mem->size]), contents, realsize);
+  mem->text = ptr;
+  memcpy(&(mem->text[mem->size]), contents, realsize);
   mem->size += realsize;
-  mem->memory[mem->size] = 0;
+  mem->text[mem->size] = 0;
  
   return realsize;
 }
@@ -36,8 +37,8 @@ main(int argc, char* argv[])
   CURL *curl;
   CURLcode res;
   struct response_t response;
- 
-  response.memory = malloc(1);  /* will be grown as needed by the realloc above */
+
+  response.text = malloc(1);  /* will be grown as needed by the realloc above */
   response.size = 0;    /* no data at this point */
  
   curl_global_init(CURL_GLOBAL_DEFAULT);
@@ -57,12 +58,73 @@ main(int argc, char* argv[])
         curl_easy_strerror(res));
     }
     else {
+      size_t i;
+      json_t *root;
+      json_error_t error;
+
       printf("%lu bytes retrieved\n", (unsigned long)response.size);
+      root = json_loads(response.text, 0, &error);
+
+      if(!root)
+      {
+        fprintf(stderr, "error: on line %d: %s\n", error.line, error.text);
+        return 1;
+      }
+
+      if(!json_is_array(root))
+      {
+        fprintf(stderr, "error: root is not an array\n");
+        json_decref(root);
+        return 1;
+      }
+
+      for(i = 0; i < json_array_size(root); i++)
+      {
+        json_t *data, *optimals, *optimal, *timestamp;
+        const char *timestamp_text;
+
+        data = json_array_get(root, i);
+        if(!json_is_object(data))
+        {
+          fprintf(stderr, "error: forecast data %d is not an object\n", (int)i);
+          json_decref(root);
+          return 1;
+        }
+
+        optimals = json_object_get(data, "optimalDataPoints");
+        if(!json_is_array(optimals))
+        {
+          fprintf(stderr, "error: optimalDataPoints is not an array\n");
+          json_decref(root);
+          return 1;
+        }
+
+        // just look at the first for now
+        optimal = json_array_get(optimals, 0);
+        if(!json_is_object(optimal))
+        {
+          fprintf(stderr, "error: forecast %d optimalDataPoints %d is not an object\n", (int)i, (int)0);
+          json_decref(root);
+          return 1;
+        }
+
+        timestamp = json_object_get(optimal, "timestamp");
+        if(!json_is_string(timestamp))
+        {
+            fprintf(stderr, "error: forecast %d optimalDataPoints %d timestamp is not a string\n", (int)i, (int)0);
+            json_decref(root);
+            return 1;
+        }
+
+        timestamp_text = json_string_value(timestamp);
+        printf("optimal timestamp %s\n", timestamp_text);
+      }
+
     }
     curl_easy_cleanup(curl);
   }
 
-  free(response.memory);
+  free(response.text);
 
   curl_global_cleanup();
  
