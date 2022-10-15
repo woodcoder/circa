@@ -7,7 +7,7 @@
 
 #define ISO8601_URL_FORMAT "%d-%02d-%02dT%02d%%3A%02d%%3A%02dZ"
 #define ISO8601_URL_SIZE   24
-#define URL_FORMAT   "https://carbon-aware-api.azurewebsites.net/emissions/forecasts/current?location=eastus&dataStartAt=%s&dataEndAt=%s&windowSize=%d"
+#define URL_FORMAT   "https://carbon-aware-api.azurewebsites.net/emissions/forecasts/current?location=eastus&dataEndAt=%s&windowSize=%d"
 #define URL_SIZE     256
 
 struct response_t {
@@ -39,8 +39,7 @@ write_response(void *contents, size_t size, size_t nmemb, void *userp)
 int
 main(int argc, char* argv[])
 {
-  char from[ISO8601_URL_SIZE];
-  char to[ISO8601_URL_SIZE];
+  char end[ISO8601_URL_SIZE];
   int window = 30;
   struct tm* time_tm;
   char url[URL_SIZE];
@@ -50,19 +49,10 @@ main(int argc, char* argv[])
   time_t now, optimal_time;
 
   time(&now);
-  time_tm = gmtime(&now);
-  snprintf(from, ISO8601_URL_SIZE, ISO8601_URL_FORMAT,
-    time_tm->tm_year + 1900, // years from 1900
-    time_tm->tm_mon + 1, // 0-based
-    time_tm->tm_mday, // 1-based
-    time_tm->tm_hour,
-    time_tm->tm_min + 5, // make sure we're in future window
-    0);
-
   // add time this way isn't necessarily portable!
   now = now + 2 * 60 * 60;
   time_tm = gmtime(&now);
-  snprintf(to, ISO8601_URL_SIZE, ISO8601_URL_FORMAT,
+  snprintf(end, ISO8601_URL_SIZE, ISO8601_URL_FORMAT,
     time_tm->tm_year + 1900, // years from 1900
     time_tm->tm_mon + 1, // 0-based
     time_tm->tm_mday, // 1-based
@@ -70,9 +60,9 @@ main(int argc, char* argv[])
     time_tm->tm_min,
     0);
 
-  printf("Requesting %d min window between %s and %s\n", window, from, to);
+  printf("Requesting %d min window before %s\n", window, end);
 
-  snprintf(url, URL_SIZE, URL_FORMAT, from, to, window);
+  snprintf(url, URL_SIZE, URL_FORMAT, end, window);
 
   response.text = malloc(1);  /* will be grown as needed by the realloc above */
   response.size = 0;    /* no data at this point */
