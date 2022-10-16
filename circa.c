@@ -40,6 +40,7 @@ bool parse_args(int argc, char *argv[], params_t *params) {
   } else {
     params->hours = conv;
   }
+  i++;
 
   params->window = 30;
 
