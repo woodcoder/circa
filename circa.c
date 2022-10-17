@@ -12,49 +12,134 @@
 #define ISO8601_URL_FORMAT "%d-%02d-%02dT%02d%%3A%02d%%3A%02dZ"
 #define ISO8601_URL_SIZE 24
 #define URL_FORMAT                                                             \
-  "https://carbon-aware-api.azurewebsites.net/emissions/forecasts/"            \
-  "current?location=%s&dataEndAt=%s&windowSize=%d"
+  "%s/emissions/forecasts/current?location=%s&dataEndAt=%s&windowSize=%d"
 #define URL_SIZE 256
 
 typedef struct Params_t {
-  int hours;
+  char *url;
+  char *location;
   int window;
+  int hours;
   size_t command;
 } params_t;
 
+void default_args(params_t *params) {
+  params->url = "https://carbon-aware-api.azurewebsites.net";
+  params->location = "eastus";
+  params->window = 30;
+}
+
+bool parse_url_prefix(char *url_str, params_t *params) {
+  size_t len = strnlen(url_str, URL_SIZE);
+  if (len > 150) {
+    // URL_SIZE - 18 (location) - ISO8601_URL_SIZE - 3 (window) - 61 (path)
+    return false;
+  }
+  params->url = url_str;
+  return true;
+}
+bool parse_location(char *location_str, params_t *params) {
+  size_t len = strnlen(location_str, URL_SIZE);
+  if (len > 18) {
+    return false;
+  }
+  params->location = location_str;
+  return true;
+}
+
+bool parse_window_duration(char *duration_str, params_t *params) {
+  char *p;
+  errno = 0;
+  long conv = strtol(duration_str, &p, 10);
+
+  if (errno != 0 || *p != '\0' || conv > 6 * 60 || conv < 1) {
+    fprintf(stderr,
+            "Error: estimated duration %s must be between 1 and 360 minutes (6 "
+            "hours)\n",
+            duration_str);
+    return false;
+  }
+
+  params->window = (int)conv;
+  return true;
+}
+
+bool parse_hours(char *hours_str, params_t *params) {
+  char *p;
+  errno = 0;
+  long conv = strtol(hours_str, &p, 10);
+
+  if (errno != 0 || *p != '\0' || conv > 24 || conv < 1) {
+    fprintf(stderr, "Error: hours %s must be between 1 and 24\n", hours_str);
+    return false;
+  }
+  params->hours = (int)conv;
+  return true;
+}
+
 bool parse_args(int argc, char *argv[], params_t *params) {
-  if (argc < 4) {
+  default_args(params);
+
+  if (argc < 2) {
+    // we need hours, at least
     return false;
   }
 
   size_t i = 1;
-  char *p;
-  int hours;
+  while (i < argc && argv[i][0] == '-') {
+    bool (*parse_value)(char *, params_t *params) = NULL;
+    switch (argv[i][1]) {
+    case 'u':
+      parse_value = parse_url_prefix;
+      break;
+    case 'l':
+      parse_value = parse_location;
+      break;
+    case 'd':
+      parse_value = parse_window_duration;
+      break;
+    default:
+      // unexpected switch or null
+      return false;
+    }
+    if (parse_value) {
+      i++;
+      if (i == argc) {
+        return false;
+      }
+      if (!parse_value(argv[i], params)) {
+        return false;
+      }
+    }
+    i++;
+  }
 
-  errno = 0;
-  long conv = strtol(argv[i], &p, 10);
-
-  if (errno != 0 || *p != '\0' || conv > 24 || conv < 1) {
-    fprintf(stderr, "Error: hours %s must be between 1 and 24\n", argv[i]);
+  if (i == argc) {
     return false;
-  } else {
-    params->hours = conv;
+  }
+  if (!parse_hours(argv[i], params)) {
+    return false;
   }
   i++;
 
-  params->window = 30;
-
+  // anything else is the optional command and its params
   params->command = i;
   return true;
 }
 
-void print_usage(char *name) {
-  printf("Usage: %s HOURS [COMMAND [ARG]...]\n", name);
-  printf("\
-Run COMMAND at somepoint in the next few HOURS (between 1 and 24) when\n\
-local (%s) carbon intensity is at its lowest.  Assumes command will\n\
-complete within %d minute window.\n",
-         "eastus", 30);
+void print_usage(char *name, params_t *params) {
+  printf("OVERVIEW: Circa - carbon nice scripting\n\n");
+  printf("USAGE: %s [option ...] hours [command [argument ...]]\n\n", name);
+  printf("DESCRIPTION:\n\
+Run COMMAND at somepoint in the next few HOURS (between 1 and 24) when local\n\
+(default %s) carbon intensity is at its lowest. Assumes command will complete\n\
+complete within a default %d minute duration window. If no command is supplied,\n\
+the program will just block until the best time.\n\n",
+         params->location, params->window);
+  printf("OPTIONS:\n\
+  -l <location>     specify location to check for carbon intensity\n\
+  -d <duration>     estimated window of runtime of command/task in minutes\n\
+  -u <api url>      url prefix of Carbon Aware API server to consult\n");
 }
 
 void format_url(params_t *params, char *url) {
@@ -75,7 +160,7 @@ void format_url(params_t *params, char *url) {
   printf("Requesting %d min window before %02d:%02d UTC\n", params->window,
          time_tm->tm_hour, time_tm->tm_min);
 
-  snprintf(url, URL_SIZE, URL_FORMAT, "eastus", end, params->window);
+  snprintf(url, URL_SIZE, URL_FORMAT, params->url, params->location, end, params->window);
 }
 
 typedef struct Response_t {
@@ -179,6 +264,7 @@ void parse_response(response_t *response, void *wait_seconds) {
       fprintf(stderr,
               "error: forecast %d optimalDataPoints %d is not an object\n",
               (int)i, (int)0);
+      fprintf(stderr, "RESPONSE\n%s\n", response->text);
       json_decref(root);
       return;
     }
@@ -225,10 +311,8 @@ int check_errors() {
 
 int main(int argc, char *argv[]) {
   params_t params;
-  bool success = parse_args(argc, argv, &params);
-
-  if (!success) {
-    print_usage(argv[0]);
+  if (!parse_args(argc, argv, &params)) {
+    print_usage(argv[0], &params);
     return 1;
   }
 
@@ -238,10 +322,14 @@ int main(int argc, char *argv[]) {
   double wait_seconds = -DBL_MAX;
   call_api(url, parse_response, &wait_seconds);
 
-  printf("Sleeping for %.2f minutes\n", wait_seconds / 60);
-
-  if (wait_seconds > 0) {
+  if (wait_seconds < 0) {
+    printf("Sleeping for %.2f minutes\n", wait_seconds / 60);
     sleep(wait_seconds);
+  }
+
+  if (params.command >= argc) {
+    // no command, just return when ready
+    return 0;
   }
 
   // replace this program with the command
