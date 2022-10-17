@@ -5,14 +5,39 @@
 ## Usage
 
 ```
-ca <HOURS> <COMMAND> [<ARGS>]
+ca [option ...] hours [command [argument ...]]
 ```
 
 The `ca` command will check the Carbon Aware API for the optimal time in the
-next few *HOURS* to run the *COMMAND*.  It currently assumes a *eastus* server
-location and a running window of *30* minutes.
+next few *HOURS* to run the *COMMAND* to make use of the lowest forecast carbon
+intensity energy.
 
 Circa is a project for [Carbon Hack 22](https://taikai.network/en/gsf/hackathons/carbonhack22/overview).
+
+### Options
+
+<dl>
+  <dt><b>-l</b> &lt;location&gt;</dt>
+  <dd>
+    specify
+    <a href="https://github.com/Green-Software-Foundation/carbon-aware-sdk/blob/dev/src/CarbonAware.LocationSources/CarbonAware.LocationSources.Azure/src/azure-regions.json">
+      location
+    </a>
+    to check for carbon intensity
+  </dd>
+  <dt><b>-l</b> &lt;duration&gt;</dt>
+  <dd>estimated window of runtime of command/task in minutes</dd>
+  <dt><b>-u</b> &lt;api url&gt;</dt>
+  <dd>url prefix of Carbon Aware API server to consult</dd>
+</dl>
+
+### Example
+
+On macOS, you could run the following to pop up a reminder to charge your latop for a couple of hours:
+
+```
+./ca -d 120 8 osascript -e 'display notification "Why not plug in your charger?" with title "Low Carbon Energy Available"'
+```
 
 ## Motivation
 
