@@ -37,6 +37,7 @@ void load_config(const char *path, params_t *params) {
               strerror(errno));
     }
   } else {
+    printf("Loading %s\n", path);
     while (fgets(line_buffer, 255, fp)) {
       // strip trailing CRs and LFs
       line_buffer[strcspn(line_buffer, "\r\n")] = 0;
@@ -81,7 +82,6 @@ void default_args(params_t *params) {
 
   char user_config[255];
   home_path("/.circa/config", user_config);
-  printf("loading %s\n", user_config);
   load_config(user_config, params);
 }
 
@@ -379,7 +379,7 @@ int main(int argc, char *argv[]) {
   double wait_seconds = -DBL_MAX;
   call_api(url, parse_response, &wait_seconds);
 
-  if (wait_seconds > 0) {
+  if (wait_seconds > 5 * 60) {
     printf("Sleeping for %.2f minutes\n", wait_seconds / 60);
     sleep(wait_seconds);
   }
