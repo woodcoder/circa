@@ -1,5 +1,6 @@
 #include <errno.h>
 #include <float.h>
+#include <pwd.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -23,10 +24,65 @@ typedef struct Params_t {
   size_t command;
 } params_t;
 
+// gracefully attempt to load config from a file, silently fail if it
+// doesn't exist, warn if it exists, but is not readable
+void load_config(const char *path, params_t *params) {
+  char line_buffer[255];
+  FILE *fp;
+  fp = fopen(path, "r");
+  if (fp == NULL) {
+    if (errno != ENOENT) {
+      // if anything other than file not found (e.g. permissions), warn
+      fprintf(stderr, "Warning: ignoring error accessing %s '%s'\n", path,
+              strerror(errno));
+    }
+  } else {
+    while (fgets(line_buffer, 255, fp)) {
+      // strip trailing CRs and LFs
+      line_buffer[strcspn(line_buffer, "\r\n")] = 0;
+      // ignore blank lines and comments
+      if (strnlen(line_buffer, 255) == 0 || line_buffer[0] == '#') {
+        continue;
+      }
+
+      char key[255];
+      char value[255];
+      sscanf(line_buffer, "%s %s", key, value);
+
+      if (strcmp(key, "url") == 0) {
+        free(params->url);
+        params->url = strdup(value);
+      }
+      if (strcmp(key, "location") == 0) {
+        free(params->location);
+        params->location = strdup(value);
+      }
+    }
+    fclose(fp);
+  }
+}
+
+void home_path(char *file, char *path) {
+  const char *homedir;
+  if ((homedir = getenv("HOME")) == NULL) {
+    homedir = getpwuid(getuid())->pw_dir;
+  }
+  strcpy(path, homedir);
+  strcat(path, "/.circa/config");
+}
+
 void default_args(params_t *params) {
-  params->url = "https://carbon-aware-api.azurewebsites.net";
-  params->location = "eastus";
+  // copy strings so they can be freed if overridden by config files
+  params->url = strdup("https://carbon-aware-api.azurewebsites.net");
+  params->location = strdup("eastus");
   params->window = 30;
+
+  load_config("/etc/circa.conf", params);
+
+  char user_config[255];
+  home_path("/.circa/config", user_config);
+  printf("loading %s\n", user_config);
+  load_config(user_config, params);
 }
 
 bool parse_url_prefix(char *url_str, params_t *params) {
@@ -157,10 +213,11 @@ void format_url(params_t *params, char *url) {
            time_tm->tm_mday,        // 1-based
            time_tm->tm_hour, time_tm->tm_min, 0);
 
-  printf("Requesting %d min window before %02d:%02d UTC\n", params->window,
-         time_tm->tm_hour, time_tm->tm_min);
+  printf("Requesting %d min duration window before %02d:%02d UTC in %s\n",
+         params->window, time_tm->tm_hour, time_tm->tm_min, params->location);
 
-  snprintf(url, URL_SIZE, URL_FORMAT, params->url, params->location, end, params->window);
+  snprintf(url, URL_SIZE, URL_FORMAT, params->url, params->location, end,
+           params->window);
 }
 
 typedef struct Response_t {
@@ -304,7 +361,7 @@ int check_errors() {
   int exit_status =
       errno == ENOENT ? 127 : 126; // EXIT_ENOENT : EXIT_CANNOT_INVOKE;
   if (errno != 0) {
-    fprintf(stderr, "%s\n", strerror(errno));
+    fprintf(stderr, "Error: problem running command '%s'\n", strerror(errno));
   }
   return exit_status;
 }
