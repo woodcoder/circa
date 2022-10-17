@@ -133,7 +133,8 @@ void print_usage(char *name, params_t *params) {
   printf("DESCRIPTION:\n\
 Run COMMAND at somepoint in the next few HOURS (between 1 and 24) when local\n\
 (default %s) carbon intensity is at its lowest. Assumes command will complete\n\
-within a default %d minute duration window.\n\n",
+complete within a default %d minute duration window. If no command is supplied,\n\
+the program will just block until the best time.\n\n",
          params->location, params->window);
   printf("OPTIONS:\n\
   -l <location>     specify location to check for carbon intensity\n\
@@ -324,6 +325,11 @@ int main(int argc, char *argv[]) {
   if (wait_seconds < 0) {
     printf("Sleeping for %.2f minutes\n", wait_seconds / 60);
     sleep(wait_seconds);
+  }
+
+  if (params.command >= argc) {
+    // no command, just return when ready
+    return 0;
   }
 
   // replace this program with the command

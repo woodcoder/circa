@@ -10,7 +10,8 @@ ca [option ...] hours [command [argument ...]]
 
 The `ca` command will check the Carbon Aware API for the optimal time in the
 next few *HOURS* to run the *COMMAND* to make use of the lowest forecast carbon
-intensity energy.
+intensity energy.  If no *COMMAND* is supplied, the program will just block
+(sleep) until that time.
 
 Circa is a project for [Carbon Hack 22](https://taikai.network/en/gsf/hackathons/carbonhack22/overview).
 
