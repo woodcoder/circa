@@ -379,7 +379,7 @@ int main(int argc, char *argv[]) {
   double wait_seconds = -DBL_MAX;
   call_api(url, parse_response, &wait_seconds);
 
-  if (wait_seconds > 0) {
+  if (wait_seconds > 5 * 60) {
     printf("Sleeping for %.2f minutes\n", wait_seconds / 60);
     sleep(wait_seconds);
   }
