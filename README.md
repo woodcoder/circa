@@ -26,11 +26,18 @@ Circa is a project for [Carbon Hack 22](https://taikai.network/en/gsf/hackathons
     </a>
     to check for carbon intensity
   </dd>
-  <dt><b>-l</b> &lt;duration&gt;</dt>
+  <dt><b>-d</b> &lt;duration&gt;</dt>
   <dd>estimated window of runtime of command/task in minutes</dd>
   <dt><b>-u</b> &lt;api url&gt;</dt>
   <dd>url prefix of Carbon Aware API server to consult</dd>
 </dl>
+
+### Configuration
+
+Defaults for the _url_ and _location_ settings can be configured system-wide or
+per user by using a [config file](circa.conf).  This should be placed in
+`/etc/circa.conf` or/and `~/.circa/config`.  These defaults are overridable by
+the command line options above.
 
 ### Example
 
