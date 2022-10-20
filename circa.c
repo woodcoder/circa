@@ -11,7 +11,7 @@
 #include <jansson.h>
 
 #define ISO8601_URL_FORMAT "%4d-%02d-%02dT%02d%%3A%02d%%3A%02dZ"
-#define ISO8601_URL_SIZE 24
+#define ISO8601_URL_SIZE 26
 #define URL_FORMAT                                                             \
   "%s/emissions/forecasts/current?location=%s&dataEndAt=%s&windowSize=%d"
 #define URL_SIZE 256
@@ -87,13 +87,14 @@ void default_args(params_t *params) {
 
 bool parse_url_prefix(char *url_str, params_t *params) {
   size_t len = strnlen(url_str, URL_SIZE);
-  if (len > 150) {
+  if (len > 148) {
     // URL_SIZE - 18 (location) - ISO8601_URL_SIZE - 3 (window) - 61 (path)
     return false;
   }
   params->url = url_str;
   return true;
 }
+
 bool parse_location(char *location_str, params_t *params) {
   size_t len = strnlen(location_str, URL_SIZE);
   if (len > 18) {
@@ -202,18 +203,19 @@ void format_url(params_t *params, char *url) {
   time_t now;
   struct tm *time_tm;
   char end[ISO8601_URL_SIZE];
-  int trunc;
+  int size;
 
   time(&now);
   // add time this way isn't necessarily portable!
   now = now + params->hours * 60 * 60;
   time_tm = gmtime(&now);
-  trunc = snprintf(end, ISO8601_URL_SIZE, ISO8601_URL_FORMAT,
+  size = snprintf(end, ISO8601_URL_SIZE, ISO8601_URL_FORMAT,
                    time_tm->tm_year + 1900, // years from 1900
                    time_tm->tm_mon + 1,     // 0-based
                    time_tm->tm_mday,        // 1-based
                    time_tm->tm_hour, time_tm->tm_min, 0);
-  if (trunc) {
+
+  if (size > ISO8601_URL_SIZE) {
     // date string was truncated which should never happen
     fprintf(stderr, "Warning: end date corrupted (iso8601 date truncated)\n");
   }
