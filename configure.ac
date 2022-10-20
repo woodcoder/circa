@@ -1,4 +1,4 @@
-AC_INIT([circa], [1.0], [andy@bitshaper.co.uk])
+AC_INIT([circa], [0.1], [andy@bitshaper.co.uk])
 AM_INIT_AUTOMAKE([foreign])
 AC_PROG_CC
 AC_CONFIG_HEADERS([config.h])

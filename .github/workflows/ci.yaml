@@ -1,0 +1,22 @@
+name: ci
+
+on:
+  push:
+    branch:
+      - main
+  pull_request:
+
+jobs:
+  build_test:
+    name: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: build
+        run: |
+          autoreconf
+          ./configure
+          make

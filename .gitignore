@@ -4,6 +4,7 @@ aclocal.m4
 *.o
 *.log
 *.status
+*.tar.gz
 /compile
 /configure
 /depcomp
