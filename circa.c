@@ -10,7 +10,7 @@
 #include <curl/curl.h>
 #include <jansson.h>
 
-#define ISO8601_URL_FORMAT "%d-%02d-%02dT%02d%%3A%02d%%3A%02dZ"
+#define ISO8601_URL_FORMAT "%4d-%02d-%02dT%02d%%3A%02d%%3A%02dZ"
 #define ISO8601_URL_SIZE 24
 #define URL_FORMAT                                                             \
   "%s/emissions/forecasts/current?location=%s&dataEndAt=%s&windowSize=%d"
