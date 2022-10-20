@@ -202,16 +202,21 @@ void format_url(params_t *params, char *url) {
   time_t now;
   struct tm *time_tm;
   char end[ISO8601_URL_SIZE];
+  int trunc;
 
   time(&now);
   // add time this way isn't necessarily portable!
   now = now + params->hours * 60 * 60;
   time_tm = gmtime(&now);
-  snprintf(end, ISO8601_URL_SIZE, ISO8601_URL_FORMAT,
-           time_tm->tm_year + 1900, // years from 1900
-           time_tm->tm_mon + 1,     // 0-based
-           time_tm->tm_mday,        // 1-based
-           time_tm->tm_hour, time_tm->tm_min, 0);
+  trunc = snprintf(end, ISO8601_URL_SIZE, ISO8601_URL_FORMAT,
+                   time_tm->tm_year + 1900, // years from 1900
+                   time_tm->tm_mon + 1,     // 0-based
+                   time_tm->tm_mday,        // 1-based
+                   time_tm->tm_hour, time_tm->tm_min, 0);
+  if (trunc) {
+    // date string was truncated which should never happen
+    fprintf(stderr, "Warning: end date corrupted (iso8601 date truncated)\n");
+  }
 
   printf("Requesting %d min duration window before %02d:%02d UTC in %s\n",
          params->window, time_tm->tm_hour, time_tm->tm_min, params->location);
@@ -232,7 +237,7 @@ static size_t write_response(void *contents, size_t size, size_t nmemb,
 
   char *ptr = realloc(mem->text, mem->size + realsize + 1);
   if (!ptr) {
-    /* out of memory! */
+    // out of memory!
     printf("not enough memory (realloc returned NULL)\n");
     return 0;
   }
