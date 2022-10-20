@@ -17,6 +17,6 @@ jobs:
           fetch-depth: 0
       - name: build
         run: |
-          autoreconf
+          autoreconf -fi
           ./configure
           make
