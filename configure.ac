@@ -1,4 +1,6 @@
-AC_INIT([circa], [0.1], [andy@bitshaper.co.uk])
+AC_INIT([circa],
+        m4_esyscmd([build-aux/git-version-gen .tarball-version]),
+        [andy@bitshaper.co.uk])
 AM_INIT_AUTOMAKE([foreign])
 AC_PROG_CC
 AC_CONFIG_HEADERS([config.h])
