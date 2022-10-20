@@ -11,6 +11,10 @@ jobs:
     name: build
     runs-on: ubuntu-latest
     steps:
+      - name: prerequisites
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y libjansson-dev
       - name: checkout
         uses: actions/checkout@v3
         with:
