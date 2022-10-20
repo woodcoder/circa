@@ -1,5 +1,5 @@
 AC_INIT([circa],
-        m4_translit(m4_esyscmd([git describe --abbrev=4 --match="v*" HEAD]), 'v'),
+        m4_translit(m4_esyscmd([git describe --abbrev=4 --match="v*" HEAD]), 'vg'),
         [andy@bitshaper.co.uk])
 AM_INIT_AUTOMAKE([foreign])
 AC_PROG_CC
