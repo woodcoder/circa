@@ -1,5 +1,5 @@
 AC_INIT([circa],
-        m4_esyscmd([build-aux/git-version-gen .tarball-version]),
+        m4_translit(m4_esyscmd([git describe --abbrev=4 --match="v*" HEAD]), 'v'),
         [andy@bitshaper.co.uk])
 AM_INIT_AUTOMAKE([foreign])
 AC_PROG_CC
