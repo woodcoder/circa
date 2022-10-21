@@ -2,6 +2,24 @@
 
 > _ca._, abbreviation for _circa (latin)_, meaning approximately
 
+
+## Installation
+
+Download a [release](https://github.com/woodcoder/circa/releases) and build it
+using something like the following:
+
+```
+curl -LO https://github.com/woodcoder/circa/releases/download/v0.1/circa-0.1.tar.gz
+./configure
+make
+sudo make install
+```
+
+(You will need to ensure that you have the Curl and Jansson libraries
+installed.  See the **Building on...** sections below for easy package manager
+one liners to do this.)
+
+
 ## Usage
 
 ```
@@ -46,6 +64,7 @@ On macOS, you could run the following to pop up a reminder to charge your latop 
 ```
 ./ca -d 120 8 osascript -e 'display notification "Why not plug in your charger?" with title "Low Carbon Energy Available"'
 ```
+
 
 ## Motivation
 
@@ -102,12 +121,20 @@ Happy days.
 
 Feel free to contact me (woodcoder) on github, taikai or discord.
 
-
 ### Building on macOS
 
 ```
 brew install pkg-config autoconf automake libtool libcurl jansson
 autoreconf -fi -I /usr/local/opt/curl/share/aclocal
+./configure
+make
+```
+
+### Building on Ubuntu
+
+```
+sudo apt-get install -y libjansson-dev libcurl4-openssl-dev
+autoreconf -fi
 ./configure
 make
 ```
