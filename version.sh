@@ -3,5 +3,4 @@
 
 v=`git describe --abbrev=4 --match="v*" HEAD`
 v=`echo "$v" | tr -d "vg" | tr "\-" "."`
-echo $v > VERSION
 printf %s "$v"
