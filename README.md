@@ -57,14 +57,52 @@ per user by using a [config file](circa.conf).  This should be placed in
 `/etc/circa.conf` or/and `~/.circa/config`.  These defaults are overridable by
 the command line options above.
 
-### Example
+## Examples
 
 On macOS, you could run the following to pop up a reminder to charge your latop for a couple of hours:
 
 ```
-./ca -d 120 8 osascript -e 'display notification "Why not plug in your charger?" with title "Low Carbon Energy Available"'
+ca -d 120 8 osascript -e 'display notification "Why not plug in your charger?" with title "Lower Carbon Energy Available"'
 ```
 
+If you install it with WSL under Windows, you can do something similar with this PowerShell script:
+
+```
+function Show-Notification {
+    param (
+        [string] $ToastText1,
+        [string] $ToastText2
+    )
+
+    $Notification = "<toast>
+      <visual>
+        <binding template='ToastText02'>
+          <text id='1'>$($ToastText1)</text>
+          <text id='2'>$($ToastText2)</text>
+        </binding>
+      </visual>
+    </toast>"
+
+    $NotificationXml = New-Object Windows.Data.Xml.Dom.XmlDocument
+    $NotificationXml.LoadXml($Notification)
+
+    $Toast = [Windows.UI.Notifications.ToastNotification]::new($NotificationXml)
+    $Toast.Tag = "Carbon Aware"
+    $Toast.Group = "Carbon Aware"
+    $Toast.ExpirationTime = [DateTimeOffset]::Now.AddMinutes(1)
+
+    $Notifier = [Windows.UI.Notifications.ToastNotificationManager]::CreateToastNotifier("Carbon Aware")
+    $Notifier.Show($Toast);
+}
+
+wsl ca -d 120 8
+Show-Notification "Lower Carbon Energy Available" "Why not plug in your charger?"
+```
+
+Save the above in a file (e.g. `carbon-aware.ps1`) and run it from a Windows
+PowerShell prompt.  You may need to run
+`Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass`
+in your PowerShell window first.
 
 ## Motivation
 
