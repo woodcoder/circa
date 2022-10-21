@@ -10,6 +10,8 @@ using something like the following:
 
 ```
 curl -LO https://github.com/woodcoder/circa/releases/download/v0.1/circa-0.1.tar.gz
+tar -xf circa-0.1.tar.gz
+cd circa-0.1
 ./configure
 make
 sudo make install
@@ -133,7 +135,7 @@ make
 ### Building on Ubuntu
 
 ```
-sudo apt-get install -y libjansson-dev libcurl4-openssl-dev
+sudo apt-get install -y build-essential libjansson-dev libcurl4-openssl-dev
 autoreconf -fi
 ./configure
 make
