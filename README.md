@@ -49,7 +49,10 @@ Circa is a project for [Carbon Hack 22](https://taikai.network/en/gsf/hackathons
   <dt><b>-d</b> &lt;duration&gt;</dt>
   <dd>estimated window of runtime of command/task in minutes</dd>
   <dt><b>-u</b> &lt;api url&gt;</dt>
-  <dd>url prefix of Carbon Aware API server to consult</dd>
+  <dd>
+    url prefix of Carbon Aware API server to consult OR<br>
+    full path to Carbon Aware CLI executable
+  </dd>
 </dl>
 
 ### Configuration
@@ -173,8 +176,60 @@ make
 ### Building on Ubuntu
 
 ```
-sudo apt-get install -y build-essential libjansson-dev libcurl4-openssl-dev
+sudo apt-get install -y build-essential libcurl4-openssl-dev libjansson-dev
 autoreconf -fi
 ./configure
 make
+```
+
+### Building on Fedora
+
+```
+sudo dnf -y install autoconf automake curl-devel jansson-devel
+autoreconf -fi
+./configure
+make
+```
+
+### Carbon Aware CLI
+
+To install the SDK CLI you will first need the .NET SDK
+
+   * macOS - download and install the (macOS .NET SDK Installer)[https://dotnet.microsoft.com/en-us/download/dotnet/6.0].
+   * Ubuntu - `sudo apt-get install -y dotnet-sdk-6.0`
+   * Fedora - `sudo yum -y install dotnet`
+
+Then you will need the *new* CLI redesign
+(pull request)[https://github.com/Green-Software-Foundation/carbon-aware-sdk/pull/158] branch:
+```
+curl -LO https://github.com/microsoft/carbon-aware-sdk/archive/refs/heads/162/cli-redesign.tar.gz
+tar xf cli-redesign.tar.gz
+cd carbon-aware-sdk-162-cli-redesign/src/CarbonAware.CLI/src
+```
+
+Update the `appsettings.json`, for example, with your WattTime credentials:
+```
+vi appsettings.json 
+{
+    "Logging": {
+      "LogLevel": {
+        "Default": "Information",
+        "Microsoft.AspNetCore": "Warning"
+      }
+    },
+    "AllowedHosts": "*",
+    "carbonAwareVars": {
+        "carbonIntensityDataSource": "WattTime"
+    },
+    "wattTimeClient": {
+        "username": "<watttime username>",
+        "password": "<watttime password>"
+    }
+}
+```
+
+Build a release and test it:
+```
+dotnet publish -c Release
+bin/Release/net6.0/publish/caw emissions -l eastus
 ```
