@@ -212,7 +212,8 @@ the program will just block until the best time.\n\n",
   printf("OPTIONS:\n\
   -l <location>     specify location to check for carbon intensity\n\
   -d <duration>     estimated window of runtime of command/task in minutes\n\
-  -u <api url>      url prefix of Carbon Aware API server to consult\n");
+  -u <api url>      url prefix of Carbon Aware API server to consult OR\n\
+                    full path to Carbon Aware CLI executable\n");
 }
 
 void format_params(params_t *params, size_t iso8601_size, char *iso8601_format,
@@ -326,6 +327,8 @@ void call_cli(char *cmd, void (*extract_data)(response_t *, void *),
     fprintf(stderr, "Command not found or exited with error status\n");
     return;
   }
+
+  printf("OUTPUT: %s", response.text);
 
   extract_data(&response, data);
 
