@@ -314,7 +314,7 @@ void call_cli(char *cmd, void (*extract_data)(response_t *, void *),
   FILE *fp;
 
   if ((fp = popen(cmd, "r")) == NULL) {
-    fprintf(stderr, "Error opening pipe!\n");
+    fprintf(stderr, "Error running CLI command\n");
     return;
   }
 
@@ -327,8 +327,6 @@ void call_cli(char *cmd, void (*extract_data)(response_t *, void *),
     fprintf(stderr, "Command not found or exited with error status\n");
     return;
   }
-
-  printf("OUTPUT: %s", response.text);
 
   extract_data(&response, data);
 
