@@ -9,9 +9,9 @@ Download a [release](https://github.com/woodcoder/circa/releases) and build it
 using something like the following:
 
 ```
-curl -LO https://github.com/woodcoder/circa/releases/download/v0.1/circa-0.1.tar.gz
-tar -xf circa-0.1.tar.gz
-cd circa-0.1
+curl -LO https://github.com/woodcoder/circa/releases/download/v0.2/circa-0.2.tar.gz
+tar -xf circa-0.2.tar.gz
+cd circa-0.2
 ./configure
 make
 sudo make install

@@ -13,7 +13,7 @@ jobs:
       - name: prerequisites
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y libjansson-dev libcurl4-openssl-dev
+          sudo apt-get install -y libcurl4-openssl-dev libjansson-dev
       - name: checkout
         uses: actions/checkout@v3
         with:
@@ -36,7 +36,7 @@ jobs:
           tag_name: ${{ github.ref }}
           release_name: Release ${{ env.VERSION }}
           draft: false
-          prerelease: true
+          prerelease: false
       - name: upload release
         uses: actions/upload-release-asset@v1
         env:
