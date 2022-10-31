@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
 #include <unistd.h>
 
 #include <curl/curl.h>
@@ -16,7 +17,13 @@
   "%s/emissions/forecasts/current?location=%s&dataEndAt=%s&windowSize=%d"
 #define URL_SIZE 256
 
+#define ISO8601_CLI_FORMAT "%4d-%02d-%02dT%02d:%02d:%02dZ"
+#define ISO8601_CLI_SIZE 22
+#define CLI_FORMAT "%s emissions-forecasts -l %s -e %s -w %d"
+#define CLI_SIZE 256
+
 typedef struct Params_t {
+  bool cli;
   char *url;
   char *location;
   int window;
@@ -74,6 +81,7 @@ void home_path(char *file, char *path) {
 
 void default_args(params_t *params) {
   // copy strings so they can be freed if overridden by config files
+  params->cli = false;
   params->url = strdup("https://carbon-aware-api.azurewebsites.net");
   params->location = strdup("eastus");
   params->window = 30;
@@ -179,6 +187,14 @@ bool parse_args(int argc, char *argv[], params_t *params) {
   }
   i++;
 
+  // check to see if URL is path to carbon aware cli executable
+  if (params->url[0] != 'h') {
+    struct stat sb;
+    if (stat(params->url, &sb) == 0 && sb.st_mode & S_IXUSR) {
+      params->cli = true;
+    }
+  }
+
   // anything else is the optional command and its params
   params->command = i;
   return true;
@@ -199,23 +215,24 @@ the program will just block until the best time.\n\n",
   -u <api url>      url prefix of Carbon Aware API server to consult\n");
 }
 
-void format_url(params_t *params, char *url) {
+void format_params(params_t *params, size_t iso8601_size, char *iso8601_format,
+                   size_t len, char *format, char *param_str) {
   time_t now;
   struct tm *time_tm;
-  char end[ISO8601_URL_SIZE];
+  char end[iso8601_size];
   int size;
 
   time(&now);
   // add time this way isn't necessarily portable!
   now = now + params->hours * 60 * 60;
   time_tm = gmtime(&now);
-  size = snprintf(end, ISO8601_URL_SIZE, ISO8601_URL_FORMAT,
-                   time_tm->tm_year + 1900, // years from 1900
-                   time_tm->tm_mon + 1,     // 0-based
-                   time_tm->tm_mday,        // 1-based
-                   time_tm->tm_hour, time_tm->tm_min, 0);
+  size = snprintf(end, iso8601_size, iso8601_format,
+                  time_tm->tm_year + 1900, // years from 1900
+                  time_tm->tm_mon + 1,     // 0-based
+                  time_tm->tm_mday,        // 1-based
+                  time_tm->tm_hour, time_tm->tm_min, 0);
 
-  if (size > ISO8601_URL_SIZE) {
+  if (size > iso8601_size) {
     // date string was truncated which should never happen
     fprintf(stderr, "Warning: end date corrupted (iso8601 date truncated)\n");
   }
@@ -223,7 +240,7 @@ void format_url(params_t *params, char *url) {
   printf("Requesting %d min duration window before %02d:%02d UTC in %s\n",
          params->window, time_tm->tm_hour, time_tm->tm_min, params->location);
 
-  snprintf(url, URL_SIZE, URL_FORMAT, params->url, params->location, end,
+  snprintf(param_str, len, format, params->url, params->location, end,
            params->window);
 }
 
@@ -240,7 +257,7 @@ static size_t write_response(void *contents, size_t size, size_t nmemb,
   char *ptr = realloc(mem->text, mem->size + realsize + 1);
   if (!ptr) {
     // out of memory!
-    printf("not enough memory (realloc returned NULL)\n");
+    fprintf(stderr, "not enough memory (realloc returned NULL)\n");
     return 0;
   }
 
@@ -252,7 +269,8 @@ static size_t write_response(void *contents, size_t size, size_t nmemb,
   return realsize;
 }
 
-void call_api(char *url, void (*extra_data)(response_t *, void *), void *data) {
+void call_api(char *url, void (*extract_data)(response_t *, void *),
+              void *data) {
   CURL *curl;
   CURLcode res;
   response_t response;
@@ -273,7 +291,7 @@ void call_api(char *url, void (*extra_data)(response_t *, void *), void *data) {
       fprintf(stderr, "curl_easy_perform() failed: %s\n",
               curl_easy_strerror(res));
     } else {
-      extra_data(&response, data);
+      extract_data(&response, data);
     }
     curl_easy_cleanup(curl);
   }
@@ -283,12 +301,43 @@ void call_api(char *url, void (*extra_data)(response_t *, void *), void *data) {
   curl_global_cleanup();
 }
 
+void call_cli(char *cmd, void (*extract_data)(response_t *, void *),
+              void *data) {
+  const size_t BUFSIZE = 255;
+  response_t response;
+
+  response.text = malloc(1); // will be grown as needed by the realloc below
+  response.size = 0;         // no data at this point
+
+  char buf[BUFSIZE];
+  FILE *fp;
+
+  if ((fp = popen(cmd, "r")) == NULL) {
+    fprintf(stderr, "Error opening pipe!\n");
+    return;
+  }
+
+  while (fgets(buf, BUFSIZE, fp) != NULL) {
+    size_t read = strnlen(buf, BUFSIZE);
+    write_response(buf, sizeof(char), read, &response);
+  }
+
+  if (pclose(fp)) {
+    fprintf(stderr, "Command not found or exited with error status\n");
+    return;
+  }
+
+  extract_data(&response, data);
+
+  free(response.text);
+}
+
 void parse_response(response_t *response, void *wait_seconds) {
   size_t i;
   json_t *root;
   json_error_t error;
 
-  printf("Carbon Aware API returned %lu bytes\n",
+  printf("Carbon Aware SDK returned %lu bytes\n",
          (unsigned long)response->size);
   root = json_loads(response->text, 0, &error);
 
@@ -317,9 +366,13 @@ void parse_response(response_t *response, void *wait_seconds) {
 
     optimals = json_object_get(data, "optimalDataPoints");
     if (!json_is_array(optimals)) {
-      fprintf(stderr, "error: optimalDataPoints is not an array\n");
-      json_decref(root);
-      return;
+      // might be cli and in capitals
+      optimals = json_object_get(data, "OptimalDataPoints");
+      if (!json_is_array(optimals)) {
+        fprintf(stderr, "error: optimalDataPoints is not an array\n");
+        json_decref(root);
+        return;
+      }
     }
 
     // just look at the first for now
@@ -335,12 +388,16 @@ void parse_response(response_t *response, void *wait_seconds) {
 
     timestamp = json_object_get(optimal, "timestamp");
     if (!json_is_string(timestamp)) {
-      fprintf(stderr,
-              "error: forecast %d optimalDataPoints %d timestamp is not a "
-              "string\n",
-              (int)i, (int)0);
-      json_decref(root);
-      return;
+      // might be cli with different name
+      timestamp = json_object_get(optimal, "Time");
+      if (!json_is_string(timestamp)) {
+        fprintf(stderr,
+                "error: forecast %d optimalDataPoints %d timestamp is not a "
+                "string\n",
+                (int)i, (int)0);
+        json_decref(root);
+        return;
+      }
     }
 
     timestamp_text = json_string_value(timestamp);
@@ -380,11 +437,18 @@ int main(int argc, char *argv[]) {
     return 1;
   }
 
-  char url[URL_SIZE];
-  format_url(&params, url);
-
   double wait_seconds = -DBL_MAX;
-  call_api(url, parse_response, &wait_seconds);
+  if (params.cli) {
+    char cli[CLI_SIZE];
+    format_params(&params, ISO8601_CLI_SIZE, ISO8601_CLI_FORMAT, CLI_SIZE,
+                  CLI_FORMAT, cli);
+    call_cli(cli, parse_response, &wait_seconds);
+  } else {
+    char url[URL_SIZE];
+    format_params(&params, ISO8601_URL_SIZE, ISO8601_URL_FORMAT, URL_SIZE,
+                  URL_FORMAT, url);
+    call_api(url, parse_response, &wait_seconds);
+  }
 
   if (wait_seconds > 5 * 60) {
     printf("Sleeping for %.2f minutes\n", wait_seconds / 60);
