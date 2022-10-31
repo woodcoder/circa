@@ -358,7 +358,7 @@ void parse_response(response_t *response, void *wait_seconds) {
                               .tm_min = m,
                               .tm_sec = s};
     time_t now, optimal_time;
-    optimal_time = timegm(&timestamp_tm); // or _mkgmtime() on windows
+    optimal_time = timegm(&timestamp_tm);
     time(&now);
     *(double *)wait_seconds = difftime(optimal_time, now);
   }
