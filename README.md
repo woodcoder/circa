@@ -195,12 +195,12 @@ make
 
 To install the SDK CLI you will first need the .NET SDK
 
-   * macOS - download and install the (macOS .NET SDK Installer)[https://dotnet.microsoft.com/en-us/download/dotnet/6.0].
+   * macOS - download and install the [macOS .NET SDK Installer](https://dotnet.microsoft.com/en-us/download/dotnet/6.0).
    * Ubuntu - `sudo apt-get install -y dotnet-sdk-6.0`
    * Fedora - `sudo yum -y install dotnet`
 
 Then you will need the *new* CLI redesign
-(pull request)[https://github.com/Green-Software-Foundation/carbon-aware-sdk/pull/158] branch:
+[pull request](https://github.com/Green-Software-Foundation/carbon-aware-sdk/pull/158) branch:
 ```
 curl -LO https://github.com/microsoft/carbon-aware-sdk/archive/refs/heads/162/cli-redesign.tar.gz
 tar xf cli-redesign.tar.gz
