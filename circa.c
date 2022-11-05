@@ -212,7 +212,7 @@ the program will just block until the best time.\n\n",
   printf("OPTIONS:\n\
   -l <location>     specify location to check for carbon intensity\n\
   -d <duration>     estimated window of runtime of command/task in minutes\n\
-  -u <api url>      url prefix of Carbon Aware API server to consult OR\n\
+  -u <sdk url>      url prefix of Carbon Aware API server to consult OR\n\
                     full path to Carbon Aware CLI executable\n");
 }
 
