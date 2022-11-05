@@ -88,6 +88,9 @@ function Show-Notification {
       </visual>
     </toast>"
 
+    $null = [Windows.UI.Notifications.ToastNotificationManager, Windows.UI.Notifications, ContentType=WindowsRuntime]
+    $null = [Windows.Data.Xml.Dom.XmlDocument, Windows.Data, ContentType=WindowsRuntime]
+
     $NotificationXml = New-Object Windows.Data.Xml.Dom.XmlDocument
     $NotificationXml.LoadXml($Notification)
 
@@ -108,6 +111,8 @@ Save the above in a file (e.g. `carbon-aware.ps1`) and run it from a Windows
 PowerShell prompt.  You may need to run
 `Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass`
 in your PowerShell window first.
+
+![Screen capture of the windows notification appearing.](doc/img/windows-notification.gif "Windows Carbon Aware Notification")
 
 ## Motivation
 
