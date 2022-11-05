@@ -64,7 +64,13 @@ the command line options above.
 
 ## Examples
 
-On macOS, you could run the following to pop up a reminder to charge your latop for a couple of hours:
+On Linux, you could run the following to pop up a reminder to charge your latop for a couple of hours:
+
+```
+ca -d 120 8 notify-send "Lower Carbon Energy Available" "Why not plug in your charger?"
+```
+
+On macOS, this does a similar thing:
 
 ```
 ca -d 120 8 osascript -e 'display notification "Why not plug in your charger?" with title "Lower Carbon Energy Available"'
@@ -196,13 +202,23 @@ autoreconf -fi
 make
 ```
 
+### Building on Manjaro
+
+```
+sudo pacman -S base-devel curl jansson
+autoreconf -fi
+./configure
+make
+```
+
 ### Carbon Aware CLI
 
 To install the SDK CLI you will first need the .NET SDK
 
    * macOS - download and install the [macOS .NET SDK Installer](https://dotnet.microsoft.com/en-us/download/dotnet/6.0).
    * Ubuntu - `sudo apt-get install -y dotnet-sdk-6.0`
-   * Fedora - `sudo yum -y install dotnet`
+   * Fedora - `sudo dnf -y install dotnet`
+   * Manjaro - `sudo pacman -S dotnet-sdk aspnet-runtime`
 
 Then you will need the *new* CLI redesign
 [pull request](https://github.com/Green-Software-Foundation/carbon-aware-sdk/pull/158) branch:
