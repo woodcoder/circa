@@ -1,8 +1,8 @@
-![Circa logo with the abbreviation 'ca.' in a circle](doc/img/circa-circle.png "Circa logo")
-
 # Circa - carbon nice scripting
 
 > _ca._, abbreviation for _circa (latin)_, meaning approximately
+
+![Circa logo with the abbreviation 'ca.' in a circle](doc/img/circa-circle.png "Circa logo")
 
 
 ## Installation
@@ -65,9 +65,11 @@ per user by using a [config file](circa.conf).  This should be placed in
 `/etc/circa.conf` or/and `~/.circa/config`.  These defaults are overridable by
 the command line options above.
 
+
 ## Architecture
 
 ![Diagram showing how Circa relates to the Carbon Aware SDK and WattTime data source.](doc/img/architecture.png "Circa architecture diagram")
+
 
 ## Examples
 
@@ -126,6 +128,7 @@ PowerShell prompt.  You may need to run
 in your PowerShell window first.
 
 ![Screen capture of the windows notification appearing.](doc/img/windows-notification.gif "Windows Carbon Aware Notification")
+
 
 ## Motivation
 
@@ -218,7 +221,8 @@ autoreconf -fi
 make
 ```
 
-### Carbon Aware CLI
+
+## Carbon Aware CLI
 
 To install the SDK CLI you will first need the .NET SDK
 
