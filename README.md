@@ -70,6 +70,9 @@ the command line options above.
 
 ![Diagram showing how Circa relates to the Carbon Aware SDK and WattTime data source.](doc/img/architecture.png "Circa architecture diagram")
 
+<small><a href="https://www.flaticon.com/free-icons/forecast-analytics" title="forecast analytics icons">Forecast analytics icon created by photo3idea_studio - Flaticon</a></small>
+
+
 
 ## Examples
 
