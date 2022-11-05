@@ -20,8 +20,8 @@ sudo make install
 ```
 
 (You will need to ensure that you have the Curl and Jansson libraries
-installed.  See the **Building on...** sections below for easy package manager
-one liners to do this.)
+installed.  See the [Building on...](#building-on-macos) sections below for
+easy package manager one liners to do this.)
 
 
 ## Usage
