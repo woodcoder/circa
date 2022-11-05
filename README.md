@@ -1,3 +1,5 @@
+![Circa logo with the abbreviation 'ca.' in a circle](doc/img/circa-circle.png "Circa logo")
+
 # Circa - carbon nice scripting
 
 > _ca._, abbreviation for _circa (latin)_, meaning approximately
@@ -33,7 +35,8 @@ next few *HOURS* to run the *COMMAND* to make use of the lowest forecast carbon
 intensity energy.  If no *COMMAND* is supplied, the program will just block
 (sleep) until that time.
 
-Circa is a project for [Carbon Hack 22](https://taikai.network/en/gsf/hackathons/carbonhack22/overview).
+Circa is a [Carbon Hack 22](https://taikai.network/en/gsf/hackathons/carbonhack22/overview)
+[Project](https://taikai.network/gsf/hackathons/carbonhack22/projects/cl96vd1rs165126301uhinaxqpn0/idea).
 
 ### Options
 
@@ -48,10 +51,10 @@ Circa is a project for [Carbon Hack 22](https://taikai.network/en/gsf/hackathons
   </dd>
   <dt><b>-d</b> &lt;duration&gt;</dt>
   <dd>estimated window of runtime of command/task in minutes</dd>
-  <dt><b>-u</b> &lt;api url&gt;</dt>
+  <dt><b>-u</b> &lt;sdk url&gt;</dt>
   <dd>
     url prefix of Carbon Aware API server to consult OR<br>
-    full path to Carbon Aware CLI executable
+    full path to [Carbon Aware CLI](#carbon-aware-cli) executable
   </dd>
 </dl>
 
@@ -61,6 +64,10 @@ Defaults for the _url_ and _location_ settings can be configured system-wide or
 per user by using a [config file](circa.conf).  This should be placed in
 `/etc/circa.conf` or/and `~/.circa/config`.  These defaults are overridable by
 the command line options above.
+
+## Architecture
+
+![Diagram showing how Circa relates to the Carbon Aware SDK and WattTime data source.](doc/img/architecture.png "Circa architecture diagram")
 
 ## Examples
 
