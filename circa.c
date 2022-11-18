@@ -27,7 +27,7 @@ typedef struct Params_t {
   char *url;
   char *location;
   int window;
-  int hours;
+  int timeframe;
   size_t command;
 } params_t;
 
@@ -112,12 +112,73 @@ bool parse_location(char *location_str, params_t *params) {
   return true;
 }
 
-bool parse_window_duration(char *duration_str, params_t *params) {
+// parse string to integer between 1 & max - a return value of 0 is an error
+int parse_number(char *str, const long max, const char *field, const char *help) {
   char *p;
   errno = 0;
-  long conv = strtol(duration_str, &p, 10);
+  long conv = strtol(str, &p, 10);
 
-  if (errno != 0 || *p != '\0' || conv > 6 * 60 || conv < 1) {
+  if (errno != 0 || *p != '\0' || conv > max || conv < 1) {
+    fprintf(stderr, "Error: %s %s %s\n", field, str, help);
+    return 0;
+  }
+
+  return (int)conv;
+}
+
+// parse 0d0h0m into minutes - a return value of 0 is an error
+int parse_duration(char *str, const char* field) {
+  int days = 0;
+  int hours = 0;
+  int mins = 0;
+  char *match = str;
+  size_t size = strnlen(str, 10);
+  char *day_str = strtok(match, "d");
+  if (day_str) {
+    size_t day_size = strnlen(day_str, 10);
+    if (day_size < size) {
+      days = parse_number(day_str, 3, field, "must be between 1 and 3 days");
+      if (days == 0) {
+        return 0;
+      }
+      size -= day_size + 1;
+      match = NULL;
+    }
+  }
+  char *hour_str = strtok(match, "h");
+  if (hour_str) {
+    size_t hour_size = strnlen(hour_str, 10);
+    if (hour_size < size) {
+      hours = parse_number(hour_str, 48, field, "must be between 1 and 48 hours");
+      if (hours == 0) {
+        return 0;
+      }
+      size -= hour_size + 1;
+      match = NULL;
+    }
+  }
+  char *min_str = strtok(match, "m");
+  if (min_str) {
+    size_t min_size = strnlen(min_str, 10);
+    if (min_size < size) {
+      mins = parse_number(min_str, 90, field, "must be between 1 and 90 minutes");
+      if (mins == 0) {
+        return 0;
+      }
+    } else {
+      // no units, so default to hours
+      hours = parse_number(hour_str, 48, field, "must be between 1 and 48 hours");
+      if (hours == 0) {
+        return 0;
+      }
+    }
+  }
+  return days * 24 * 60 + hours * 60 + mins;
+}
+
+bool parse_window_duration(char *duration_str, params_t *params) {
+  int window = parse_duration(duration_str, "estimated duration");
+  if (window == 0 || window > 6 * 60) {
     fprintf(stderr,
             "Error: estimated duration %s must be between 1 and 360 minutes (6 "
             "hours)\n",
@@ -125,20 +186,17 @@ bool parse_window_duration(char *duration_str, params_t *params) {
     return false;
   }
 
-  params->window = (int)conv;
+  params->window = window;
   return true;
 }
 
-bool parse_hours(char *hours_str, params_t *params) {
-  char *p;
-  errno = 0;
-  long conv = strtol(hours_str, &p, 10);
-
-  if (errno != 0 || *p != '\0' || conv > 24 || conv < 1) {
-    fprintf(stderr, "Error: hours %s must be between 1 and 24\n", hours_str);
+bool parse_timeframe(char *hours_str, params_t *params) {
+  int timeframe = parse_duration(hours_str, "timeframe");
+  if (timeframe == 0 || timeframe > 24 * 60) {
+    fprintf(stderr, "Error: timeframe %s must be between 1 and 24 hours\n", hours_str);
     return false;
   }
-  params->hours = (int)conv;
+  params->timeframe = timeframe;
   return true;
 }
 
@@ -146,7 +204,7 @@ bool parse_args(int argc, char *argv[], params_t *params) {
   default_args(params);
 
   if (argc < 2) {
-    // we need hours, at least
+    // we need timeframe, at least
     return false;
   }
 
@@ -182,7 +240,7 @@ bool parse_args(int argc, char *argv[], params_t *params) {
   if (i == argc) {
     return false;
   }
-  if (!parse_hours(argv[i], params)) {
+  if (!parse_timeframe(argv[i], params)) {
     return false;
   }
   i++;
@@ -202,16 +260,16 @@ bool parse_args(int argc, char *argv[], params_t *params) {
 
 void print_usage(char *name, params_t *params) {
   printf("OVERVIEW: Circa - carbon nice scripting\n\n");
-  printf("USAGE: %s [option ...] hours [command [argument ...]]\n\n", name);
+  printf("USAGE: %s [option ...] timeframe [command [argument ...]]\n\n", name);
   printf("DESCRIPTION:\n\
-Run COMMAND at somepoint in the next few HOURS (between 1 and 24) when local\n\
+Run COMMAND at somepoint in the TIMEFRAME (between 1 and 24 hours) when local\n\
 (default %s) carbon intensity is at its lowest. Assumes command will complete\n\
 complete within a default %d minute duration window. If no command is supplied,\n\
 the program will just block until the best time.\n\n",
          params->location, params->window);
   printf("OPTIONS:\n\
   -l <location>     specify location to check for carbon intensity\n\
-  -d <duration>     estimated window of runtime of command/task in minutes\n\
+  -d <duration>     estimated window of runtime of command/task in hours\n\
   -u <sdk url>      url prefix of Carbon Aware API server to consult OR\n\
                     full path to Carbon Aware CLI executable\n");
 }
@@ -225,7 +283,7 @@ void format_params(params_t *params, size_t iso8601_size, char *iso8601_format,
 
   time(&now);
   // add time this way isn't necessarily portable!
-  now = now + params->hours * 60 * 60;
+  now = now + params->timeframe * 60;
   time_tm = gmtime(&now);
   size = snprintf(end, iso8601_size, iso8601_format,
                   time_tm->tm_year + 1900, // years from 1900
