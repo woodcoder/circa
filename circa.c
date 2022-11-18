@@ -262,8 +262,8 @@ void print_usage(char *name, params_t *params) {
   printf("OVERVIEW: Circa - carbon nice scripting\n\n");
   printf("USAGE: %s [option ...] timeframe [command [argument ...]]\n\n", name);
   printf("DESCRIPTION:\n\
-Run COMMAND at somepoint in the TIMEFRAME (between 1 and 24 hours) when local\n\
-(default %s) carbon intensity is at its lowest. Assumes command will complete\n\
+Run COMMAND at somepoint in the given TIMEFRAME (between 1 and 24 hours) when\n\
+local (default %s) carbon intensity is at its lowest. Assumes command will\n\
 complete within a default %d minute duration window. If no command is supplied,\n\
 the program will just block until the best time.\n\n",
          params->location, params->window);

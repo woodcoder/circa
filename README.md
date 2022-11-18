@@ -27,13 +27,15 @@ easy package manager one liners to do this.)
 ## Usage
 
 ```
-ca [option ...] hours [command [argument ...]]
+ca [option ...] timeframe [command [argument ...]]
 ```
 
 The `ca` command will check the Carbon Aware API for the optimal time in the
-next few *HOURS* to run the *COMMAND* to make use of the lowest forecast carbon
+given *TIMEFRAME* to run the *COMMAND* to make use of the lowest forecast carbon
 intensity energy.  If no *COMMAND* is supplied, the program will just block
 (sleep) until that time.
+
+*TIMEFRAME* can be given in hours, or a 1d12h30m format.
 
 Circa is a [Carbon Hack 22](https://taikai.network/en/gsf/hackathons/carbonhack22/overview)
 [Project](https://taikai.network/gsf/hackathons/carbonhack22/projects/cl96vd1rs165126301uhinaxqpn0/idea).
@@ -50,7 +52,7 @@ Circa is a [Carbon Hack 22](https://taikai.network/en/gsf/hackathons/carbonhack2
     to check for carbon intensity
   </dd>
   <dt><b>-d</b> &lt;duration&gt;</dt>
-  <dd>estimated window of runtime of command/task in minutes</dd>
+  <dd>estimated window of runtime of command/task in hours</dd>
   <dt><b>-u</b> &lt;sdk url&gt;</dt>
   <dd>
     url prefix of Carbon Aware API server to consult OR<br>
@@ -79,13 +81,13 @@ the command line options above.
 On Linux, you could run the following to pop up a reminder to charge your latop for a couple of hours:
 
 ```
-ca -d 120 8 notify-send "Lower Carbon Energy Available" "Why not plug in your charger?"
+ca -d 2h 8h notify-send "Lower Carbon Energy Available" "Why not plug in your charger?"
 ```
 
 On macOS, this does a similar thing:
 
 ```
-ca -d 120 8 osascript -e 'display notification "Why not plug in your charger?" with title "Lower Carbon Energy Available"'
+ca -d 2h 8h osascript -e 'display notification "Why not plug in your charger?" with title "Lower Carbon Energy Available"'
 ```
 
 If you install it with WSL under Windows, you can do something similar with this PowerShell script:
@@ -121,7 +123,7 @@ function Show-Notification {
     $Notifier.Show($Toast);
 }
 
-wsl ca -d 120 8
+wsl ca -d 2h 8h
 Show-Notification "Lower Carbon Energy Available" "Why not plug in your charger?"
 ```
 
