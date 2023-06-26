@@ -1,0 +1,54 @@
+.TH "CA" "1" "2022-10-31" "ca 0.2" "Circa manual"
+.hy
+.SH NAME
+.PP
+ca - carbon nice scripting
+.SH SYNOPSIS
+.PP
+ca [-\f[B]OPTION\f[R]] \f[I]TIMEFRAME\f[R] [\f[I]COMMAND\f[R]
+[\f[I]argument\f[R]]]
+.SH DESCRIPTION
+.PP
+\f[B]ca\f[R] checks the Carbon Aware API for the optimal time in the
+given \f[I]TIMEFRAME\f[R] to run the \f[I]COMMAND\f[R] to make use of
+the lowest forecast carbon intensity energy.
+If no \f[I]COMMAND\f[R] is supplied, the program will just block (sleep)
+until that time.
+.PP
+\f[I]TIMEFRAME\f[R] can be given in hours, or a 1d12h30m format.
+.SH OPTIONS
+.TP
+\f[B]-l\f[R] \f[I]location\f[R]
+specify \f[B]location\f[R] to check for carbon intensity.
+.TP
+\f[B]-d\f[R] \f[I]duration\f[R]
+estimated command/task \f[B]duration\f[R] in hours.
+.TP
+\f[B]-u\f[R] \f[I]url\f[R]
+\f[B]url\f[R] prefix of Carbon Aware API server to consult OR full path
+to Carbon Aware CLI.
+.SH FILES
+.TP
+\f[B]/etc/circa.conf\f[R]
+The system wide default configuration file.
+.TP
+\f[B]\[ti]/.circa/config\f[R]
+Per user default configuration file.
+.SH EXAMPLES
+.TP
+\f[B]ca 6h my-cpu-intensive-task.sh\f[R]
+Find the half-hour with the lowest carbon footprint in the next 6 hours
+to run the task in.
+.TP
+\f[B]ca -d 2h 8h notify-send \[lq]Lower Carbon Energy Available\[rq] \[lq]Why not plug in your charger?\[rq]\f[R]
+Pop up a reminder to charge your laptop for a couple of hours.
+.TP
+\f[B]0 0 * * * /usr/local/bin/ca -d 20m 6h /path/to/my/daily-report-script.sh\f[R]
+Find the best 20 minutes between midnight and 6am to run your report in
+using cron.
+.SH LICENCE
+.PP
+Copyright \[co] 2022 Andrew Wood.
+MIT License: <https://mit-license.org/>
+.SH AUTHORS
+Andy Wood (woodcoder).
