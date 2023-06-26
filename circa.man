@@ -31,6 +31,7 @@ to Carbon Aware CLI.
 .TP
 \f[B]/etc/circa.conf\f[R]
 The system wide default configuration file.
+.TP
 \f[B]\[ti]/.circa/config\f[R]
 Per user default configuration file.
 .SH EXAMPLES
