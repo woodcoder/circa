@@ -192,9 +192,22 @@ Feel free to contact me (woodcoder) on github, taikai or discord.
 
 ### Building on macOS
 
+#### Intel
+
 ```
 brew install pkg-config autoconf automake libtool libcurl jansson
 autoreconf -fi -I /usr/local/opt/curl/share/aclocal
+./configure
+make
+```
+
+#### Apple Silicon
+
+```
+brew install pkg-config autoconf automake libtool curl jansson
+export CPATH=/opt/homebrew/include
+export LIBRARY_PATH=/opt/homebrew/lib
+autoreconf -fi -I /opt/homebrew/opt/curl/share/aclocal
 ./configure
 make
 ```
@@ -236,12 +249,11 @@ To install the SDK CLI you will first need the .NET SDK
    * Fedora - `sudo dnf -y install dotnet`
    * Manjaro - `sudo pacman -S dotnet-sdk aspnet-runtime`
 
-Then you will need the *new* CLI redesign
-[pull request](https://github.com/Green-Software-Foundation/carbon-aware-sdk/pull/158) branch:
+Then you will need at least version 1.0.1 or later
 ```
-curl -LO https://github.com/microsoft/carbon-aware-sdk/archive/refs/heads/162/cli-redesign.tar.gz
-tar xf cli-redesign.tar.gz
-cd carbon-aware-sdk-162-cli-redesign/src/CarbonAware.CLI/src
+curl -LO https://github.com/Green-Software-Foundation/carbon-aware-sdk/archive/refs/heads/dev.tar.gz
+tar xf dev.tar.gz
+cd carbon-aware-sdk-dev/src/CarbonAware.CLI/src
 ```
 
 Update the `appsettings.json`, for example, with your WattTime credentials:
@@ -255,12 +267,17 @@ vi appsettings.json
       }
     },
     "AllowedHosts": "*",
-    "carbonAwareVars": {
-        "carbonIntensityDataSource": "WattTime"
-    },
-    "wattTimeClient": {
-        "username": "<watttime username>",
-        "password": "<watttime password>"
+    "DataSources": {
+      "EmissionsDataSource": "WattTime",
+      "ForecastDataSource": "WattTime",
+      "Configurations": {
+        "WattTime": {
+          "Type": "WattTime",
+          "Username": "<watttime username>",
+          "Password": "<watttime password>",
+          "BaseURL": "https://api2.watttime.org/v2/"
+        }
+      }
     }
 }
 ```
@@ -270,3 +287,12 @@ Build a release and test it:
 dotnet publish -c Release
 bin/Release/net6.0/publish/caw emissions -l eastus
 ```
+
+#### Troubleshooting
+
+You can check your WattTime credentials directly using the below:
+```
+curl https://api2.watttime.org/v2/login -u '<watttime username>:<watttime password>'
+```
+
+Choosing the `westus` location sometimes works if your plan is restricted.
